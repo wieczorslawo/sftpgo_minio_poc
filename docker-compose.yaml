@@ -58,6 +58,8 @@ services:
       createbuckets:
         condition: service_completed_successfully
     environment:
+      SFTPGO_DEFAULT_ADMIN_USERNAME: admin
+      SFTPGO_DEFAULT_ADMIN_PASSWORD: admin
       SFTPGO_HTTPD__BINDINGS__0__PORT: 8080
       SFTPGO_DATA_PROVIDER__DRIVER: postgresql
       SFTPGO_DATA_PROVIDER__NAME: sftpgo
@@ -65,16 +67,6 @@ services:
       SFTPGO_DATA_PROVIDER__PORT: 5432
       SFTPGO_DATA_PROVIDER__USERNAME: sftpgo
       SFTPGO_DATA_PROVIDER__PASSWORD: sftpgo
-      SFTPGO_PLUGIN__STORAGEREFS__0__NAME: s3backend
-      SFTPGO_PLUGIN__STORAGEREFS__0__TYPE: s3
-      SFTPGO_PLUGIN__STORAGEREFS__0__CONFIG: |
-        {
-          "bucket": "filesystem",
-          "endpoint": "http://minio:9000",
-          "access_key": "newuser",
-          "secret_key": "newsecret",
-          "region": "us-east-1"
-        }
     ports:
       - "2022:2022"
       - "8080:8080"
