@@ -1,6 +1,7 @@
 version: '3.9'
 
 services:
+
   minio:
     image: minio/minio
     container_name: minio
@@ -26,8 +27,8 @@ services:
       - minio
     entrypoint: >
       /bin/sh -c "
-      echo 'Wait 15s until MinIO boots up';
-      sleep 15;
+      echo 'Wait 10s until MinIO boots up';
+      sleep 10;
       mc config host add myminio http://minio:9000 minioadmin minioadmin;
       mc mb myminio/filesystem;
       mc anonymous set public myminio/filesystem;  #can be public here, in prod it shouldn't
@@ -50,6 +51,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    restart: always
 
   sftpgo:
     image: drakkan/sftpgo
@@ -60,18 +62,35 @@ services:
     environment:
       SFTPGO_DEFAULT_ADMIN_USERNAME: admin
       SFTPGO_DEFAULT_ADMIN_PASSWORD: admin
+
       SFTPGO_HTTPD__BINDINGS__0__PORT: 8080
+
       SFTPGO_DATA_PROVIDER__DRIVER: postgresql
       SFTPGO_DATA_PROVIDER__NAME: sftpgo
       SFTPGO_DATA_PROVIDER__HOST: postgres
       SFTPGO_DATA_PROVIDER__PORT: 5432
       SFTPGO_DATA_PROVIDER__USERNAME: sftpgo
       SFTPGO_DATA_PROVIDER__PASSWORD: sftpgo
+
+      #keycloak auth
+      # used keycloak from this repo:
+      # https://github.com/kanton-bern/hellodata-be/blob/9a40951aa31f225e39eb1036094b9c75c981bdd1/hello-data-deployment/docker-compose/base/base-services.yaml#L131
+
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__CLIENT_ID: "frontend-client"
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__CLIENT_SECRET: "not needed"
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__CONFIG_URL: "http://keycloak.localhost:38080/realms/hellodata"
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__REDIRECT_BASE_URL: "http://localhost:8080"
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__USERNAME_FIELD: "preferred_username"
+#      SFTPGO_HTTPD__BINDINGS__0__OIDC__ROLE_FIELD: "sftpgo_role"
     ports:
       - "2022:2022"
       - "8080:8080"
     volumes:
       - sftpgo_data:/var/lib/sftpgo
+      - ./initial-data.json:/tmp/initial-data.json:ro
+    command: sftpgo serve --loaddata-from /tmp/initial-data.json --loaddata-mode 0
+    extra_hosts:
+      - "keycloak.localhost:host-gateway"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/ping"]
       interval: 30s
