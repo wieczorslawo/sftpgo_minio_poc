@@ -30,8 +30,10 @@ services:
       echo 'Wait 10s until MinIO boots up';
       sleep 10;
       mc config host add myminio http://minio:9000 minioadmin minioadmin;
-      mc mb myminio/filesystem;
-      mc anonymous set public myminio/filesystem;  #can be public here, in prod it shouldn't
+      mc mb myminio/default-data-domain;
+      mc anonymous set public myminio/default-data-domain;  #can be public here, in prod it shouldn't
+      mc mb myminio/extra-data-domain;
+      mc anonymous set public myminio/extra-data-domain;  #can be public here, in prod it shouldn't
       exit 0;
       "
 
@@ -79,12 +81,12 @@ services:
       SFTPGO_HTTPD__BINDINGS__0__OIDC__CLIENT_ID: "frontend-client"
       SFTPGO_HTTPD__BINDINGS__0__OIDC__CLIENT_SECRET: "not needed"
       SFTPGO_HTTPD__BINDINGS__0__OIDC__CONFIG_URL: "http://keycloak.localhost:38080/realms/hellodata"
-      SFTPGO_HTTPD__BINDINGS__0__OIDC__REDIRECT_BASE_URL: "http://localhost:8080"
+      SFTPGO_HTTPD__BINDINGS__0__OIDC__REDIRECT_BASE_URL: "http://localhost:38079"
       SFTPGO_HTTPD__BINDINGS__0__OIDC__USERNAME_FIELD: "preferred_username"
 #      SFTPGO_HTTPD__BINDINGS__0__OIDC__ROLE_FIELD: "sftpgo_role"
     ports:
       - "2022:2022"
-      - "8080:8080"
+      - "38079:8080"
     volumes:
       - sftpgo_data:/var/lib/sftpgo
       - ./initial-data.json:/tmp/initial-data.json:ro
